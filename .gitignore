@@ -1,3 +1,6 @@
+# Ignore .cnli extensions. (personal extension :P)
+*.cnli
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,0 +1,18 @@
+telize:
+  image: etki/telize
+  container_name: telize
+  ports:
+    - "80:80"
+normaliz:
+  container_name: normaliz
+  build: ./normaliz/
+  ports:
+    - "8080:8080"
+  volumes:
+    - ./normaliz:/opt/normaliz
+    - ./dataset:/opt/normaliz/dataset
+  environment:
+    - CONFIG_FILE=/opt/normaliz/cfg/cfg.yaml
+    - PYTHONPATH=/opt
+  links:
+    - telize
