@@ -1,5 +1,6 @@
 # Ignore .cnli extensions. (personal extension :P)
 *.cnli
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
