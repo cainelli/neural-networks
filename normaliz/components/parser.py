@@ -2,9 +2,13 @@
 import re, requests, json
 import pandas as pd 
 import progressbar
-from sklearn import preprocessing
 import tensorflow.contrib.learn as skflow
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import preprocessing
 from sklearn import metrics, cross_validation
+from mpl_toolkits.basemap import Basemap
+
 
 class Parser(object):
   def __init__(self, telize_url='http://localhost/geoip/'):
@@ -57,7 +61,7 @@ class Parser(object):
     for f in self.features:
       d[f] = r.json().get(f) or 0
       try:
-        d[f] = int(d[f]) # convert num string to int
+        d[f] = float(d[f]) # convert num string to int
       except:
         d[f] = abs(hash(d[f])) % (10 ** 8) # convert string to numerical hash.
     return d
@@ -99,3 +103,50 @@ if __name__ == "__main__":
   
   print("Accuracy: {0}".format(metrics.accuracy_score(classifier.predict(X_test), y_test)))
 
+  def outliers(df, threshold, columns):
+    for col in columns: 
+      mask = df[col] > float(threshold)*df[col].std()+df[col].mean()
+      df.loc[mask == True,col] = np.nan
+      mean_property = df.loc[:,col].mean()
+      df.loc[mask == True,col] = mean_property
+    return df
+  
+  X_cleaned = p.pd_X.copy()
+  X_cleaned = outliers(X_cleaned, 5, ['latitude', 'longitude'])
+  
+  # Create a figure of size (i.e. pretty big)
+  fig = plt.figure(figsize=(20,10))
+  
+  # Create a map, using the Gall–Peters projection, 
+  m = Basemap(projection='gall', 
+                # with low resolution,
+                resolution = 'l', 
+                # And threshold 100000
+                area_thresh = 100000.0,
+                # Centered at 0,0 (i.e null island)
+                lat_0=0, lon_0=0)
+  
+  # Draw the coastlines on the map
+  m.drawcoastlines()
+  
+  # Draw country borders on the map
+  m.drawcountries()
+  
+  # Fill the land with grey
+  m.fillcontinents(color = '#888888')
+  
+  # Draw the map boundaries
+  m.drawmapboundary(fill_color='#f4f4f4')
+  
+  # Define our longitude and latitude points
+  x,y = m(p.pd_X['longitude'].values, p.pd_X['latitude'].values)
+  
+  # Plot them using round markers of size 6
+  m.plot(x, y, 'ro', markersize=6)
+    
+  lonlat = -23.5477; lonlon = -46.6358
+  for index, row in X_cleaned.iterrows():
+    m.drawgreatcircle(row['longitude'],row['latitude'],lonlon,lonlat,linewidth=1,color='b')
+  
+  m.drawcoastlines()
+  plt.show()
